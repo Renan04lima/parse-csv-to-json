@@ -1,0 +1,29 @@
+{
+  "name": "parse-csv-to-json",
+  "version": "1.0.0",
+  "author": {
+    "name": "Renan Oliveira",
+    "email": "renan04lima@gmail.com"
+  },
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Renan04lima/parse-csv-to-json.git"
+  },
+  "keywords": [
+    "node",
+    "javascript"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Renan04lima/parse-csv-to-json/issues"
+  },
+  "homepage": "https://github.com/Renan04lima/parse-csv-to-json#readme",
+  "engines": {
+    "node": "v14.18.0"
+  }
+}
