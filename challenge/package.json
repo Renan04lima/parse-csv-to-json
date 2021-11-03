@@ -25,5 +25,8 @@
   "homepage": "https://github.com/Renan04lima/parse-csv-to-json#readme",
   "engines": {
     "node": "v14.18.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }
