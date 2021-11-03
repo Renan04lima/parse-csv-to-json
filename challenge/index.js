@@ -1,5 +1,6 @@
 const fs = require('fs')
 const readline = require('readline')
+const _ = require('lodash')
 
 class ParseCSVtoJSON {
   fileLines
@@ -20,6 +21,57 @@ class ParseCSVtoJSON {
       }
       values.push(line)
     }
+
+    const columnNames = values.shift()
+    const persons = []
+    const findValueByColumn = (array, name) => {
+      return array.find(({ columnName }) => {
+        if (columnName === name) return true
+      }).value
+    }
+
+    for (let i = 0; i < values.length; i++) {
+      const arrayFinal = []
+      values[i].forEach((value, index) => {
+        arrayFinal.push({
+          columnName: columnNames[index],
+          value,
+        })
+      })
+      const getGroups = (arrayFinal) => {
+        const a = arrayFinal.filter(({ columnName, value }) => {
+          if (columnName === 'group' && value !== '') return true
+        }).map(({ value }) => value)
+        const cleanArray = []
+        a.forEach((item) => {
+          item.split(/[/"]/).forEach((i) => {
+            if (i !== '') {
+              cleanArray.push(i)
+            }
+          })
+        })
+        return cleanArray
+      }
+      const valuesFormatted = {
+        fullname: findValueByColumn(arrayFinal, 'fullname'),
+        eid: findValueByColumn(arrayFinal, 'eid'),
+        groups: getGroups(arrayFinal)
+      }
+      if (i > 0) {
+        const alreadyExist = persons.find(({ eid }) => eid === valuesFormatted.eid)
+        if (alreadyExist) {
+          const oldItem = _.remove(persons, ({ eid }) => eid === valuesFormatted.eid)
+          oldItem.forEach((item) => {
+            item.groups.forEach((i) => {
+              valuesFormatted.groups.push(i)
+            })
+          })
+          valuesFormatted.groups = _.uniq(valuesFormatted.groups)
+        }
+      }
+      persons.push(valuesFormatted)
+    }
+    console.log(persons);
   }
 }
 const filepath = "./examples/input.csv"
