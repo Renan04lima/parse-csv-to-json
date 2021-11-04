@@ -71,7 +71,13 @@ class ParseCSVtoJSON {
       }
       persons.push(valuesFormatted)
     }
-    console.log(persons);
+    this.#writeFileJson(persons)
+  }
+
+  #writeFileJson(data) {
+    fs.writeFile('output.json', JSON.stringify(data), function (err) {
+      if (err) return console.log('Sorry, try again');
+    });
   }
 }
 const filepath = "./examples/input.csv"
