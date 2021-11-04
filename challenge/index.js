@@ -39,7 +39,9 @@ class ParseCSVtoJSON {
       const valuesLineFormatted = {
         fullname: this.#findValueByColumn('fullname'),
         eid: this.#findValueByColumn('eid'),
-        groups: this.#getGroups()
+        groups: this.#getGroups(),
+        invisible: this.#isInvisible(),
+        see_all: this.#isSeeAll()
       }
       if (i > 0) {
         const alreadyExist = this.#dataFormatted.find(({ eid }) => eid === valuesLineFormatted.eid)
@@ -83,13 +85,24 @@ class ParseCSVtoJSON {
     return _.uniq(valuesLineFormatted.groups)
   }
 
+  #isInvisible() {
+    const value = this.#findValueByColumn('invisible')
+    return value === '1' || value === 'yes'
+  }
+
+  #isSeeAll() {
+    const value = this.#findValueByColumn('see_all')
+    return value === '1' || value === 'yes'
+  }
+
   #writeFileJson() {
     fs.writeFile('output.json', JSON.stringify(this.#dataFormatted), function (err) {
       if (err) return console.log('Sorry, try again');
     });
   }
 }
-const filepath = "./examples/input.csv"
+
+const filepath = "./input.csv"
 const c = new ParseCSVtoJSON(filepath)
 
 c.execute().catch(console.error)
