@@ -3,79 +3,88 @@ const readline = require('readline')
 const _ = require('lodash')
 
 class ParseCSVtoJSON {
-  fileLines
+  #fileLines
+  #valuesLine
+  #dataFormatted
 
   constructor(path) {
-    this.fileLines = readline.createInterface({
+    this.#fileLines = readline.createInterface({
       input: fs.createReadStream(path)
     })
+    this.#dataFormatted = []
   }
 
   async execute() {
     let values = []
-    for await (const item of this.fileLines) {
-      let line = item.split(",")
-      if (line.length > 12) {
-        const removeCommaOfGroup = item.replace(',"S', '"S')
-        line = removeCommaOfGroup.split(",")
+    for await (const line of this.#fileLines) {
+      let lineArray = line.split(",")
+      if (lineArray.length > 12) {
+        const removeCommaOfGroup = line.replace(',"S', '"S')
+        lineArray = removeCommaOfGroup.split(",")
       }
-      values.push(line)
+      values.push(lineArray)
     }
 
     const columnNames = values.shift()
-    const persons = []
-    const findValueByColumn = (array, name) => {
-      return array.find(({ columnName }) => {
-        if (columnName === name) return true
-      }).value
-    }
 
     for (let i = 0; i < values.length; i++) {
-      const arrayFinal = []
+      this.#valuesLine = []
       values[i].forEach((value, index) => {
-        arrayFinal.push({
+        this.#valuesLine.push({
           columnName: columnNames[index],
           value,
         })
       })
-      const getGroups = (arrayFinal) => {
-        const a = arrayFinal.filter(({ columnName, value }) => {
-          if (columnName === 'group' && value !== '') return true
-        }).map(({ value }) => value)
-        const cleanArray = []
-        a.forEach((item) => {
-          item.split(/[/"]/).forEach((i) => {
-            if (i !== '') {
-              cleanArray.push(i)
-            }
-          })
-        })
-        return cleanArray
-      }
-      const valuesFormatted = {
-        fullname: findValueByColumn(arrayFinal, 'fullname'),
-        eid: findValueByColumn(arrayFinal, 'eid'),
-        groups: getGroups(arrayFinal)
+
+      const valuesLineFormatted = {
+        fullname: this.#findValueByColumn('fullname'),
+        eid: this.#findValueByColumn('eid'),
+        groups: this.#getGroups()
       }
       if (i > 0) {
-        const alreadyExist = persons.find(({ eid }) => eid === valuesFormatted.eid)
+        const alreadyExist = this.#dataFormatted.find(({ eid }) => eid === valuesLineFormatted.eid)
         if (alreadyExist) {
-          const oldItem = _.remove(persons, ({ eid }) => eid === valuesFormatted.eid)
-          oldItem.forEach((item) => {
-            item.groups.forEach((i) => {
-              valuesFormatted.groups.push(i)
-            })
-          })
-          valuesFormatted.groups = _.uniq(valuesFormatted.groups)
+          valuesLineFormatted.groups = this.#mergeGroup(valuesLineFormatted)
         }
       }
-      persons.push(valuesFormatted)
+      this.#dataFormatted.push(valuesLineFormatted)
     }
-    this.#writeFileJson(persons)
+    this.#writeFileJson()
   }
 
-  #writeFileJson(data) {
-    fs.writeFile('output.json', JSON.stringify(data), function (err) {
+  #findValueByColumn(name) {
+    return this.#valuesLine.find(({ columnName }) => {
+      if (columnName === name) return true
+    }).value
+  }
+
+  #getGroups() {
+    const groupsArray = this.#valuesLine.filter(({ columnName, value }) => {
+      if (columnName === 'group' && value !== '') return true
+    }).map(({ value }) => value)
+    const cleanGroupsArray = []
+    groupsArray.forEach((item) => {
+      item.split(/[/"]/).forEach((i) => {
+        if (i !== '') {
+          cleanGroupsArray.push(i)
+        }
+      })
+    })
+    return cleanGroupsArray
+  }
+
+  #mergeGroup(valuesLineFormatted) {
+    const oldItem = _.remove(this.#dataFormatted, ({ eid }) => eid === valuesLineFormatted.eid)
+    oldItem.forEach((item) => {
+      item.groups.forEach((i) => {
+        valuesLineFormatted.groups.push(i)
+      })
+    })
+    return _.uniq(valuesLineFormatted.groups)
+  }
+
+  #writeFileJson() {
+    fs.writeFile('output.json', JSON.stringify(this.#dataFormatted), function (err) {
       if (err) return console.log('Sorry, try again');
     });
   }
